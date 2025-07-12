@@ -1,0 +1,128 @@
+{
+  "name": "WhatsApp Auto-Respuesta Básica",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",            "path": "webhook/whatsapp-bot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [140, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extraer datos del mensaje de WhatsApp\nconst messageData = $json.data;\nconst message = messageData.message;\nconst contact = messageData.contact;\n\n// Verificar que tenemos los datos necesarios\nif (!message || !contact) {\n  return { json: { error: 'Datos incompletos' } };\n}\n\n// Preparar respuesta automática\nconst autoResponse = {\n  number: contact.number,\n  message: `¡Hola ${contact.name || 'amigo'}! 🤖\\n\\nRecibí tu mensaje: \"${message.body}\"\\n\\nEste es un mensaje automático. Te responderé pronto.\\n\\n⏰ Horarios de atención:\\nLunes a Viernes: 9:00 AM - 6:00 PM\\n\\n¡Gracias por contactarme!`\n};\n\n// También extraer información para logs\nconst logData = {\n  timestamp: new Date().toISOString(),\n  from: contact.name,\n  number: contact.number,\n  message: message.body,\n  messageId: message.id,\n  isGroup: message.isGroup,\n  hasMedia: message.hasMedia\n};\n\nreturn [\n  { json: autoResponse }, // Para enviar respuesta\n  { json: logData }       // Para guardar log\n];"
+      },
+      "id": "function-node",
+      "name": "Procesar Mensaje",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [360, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/send-message",
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}"
+      },
+      "id": "http-request-node",
+      "name": "Enviar Respuesta WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [580, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"status\": \"success\", \"message\": \"Mensaje procesado correctamente\"}"
+      },
+      "id": "respond-webhook",
+      "name": "Responder Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log para debugging\nconsole.log('📱 Nuevo mensaje de WhatsApp:', $json);\n\n// Puedes agregar aquí lógica para guardar en base de datos\n// Por ejemplo, en Google Sheets o una base de datos\n\nreturn { json: $json };"
+      },
+      "id": "log-node",
+      "name": "Guardar Log",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [580, 400]
+    }
+  ],
+  "connections": {
+    "Webhook WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Procesar Mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar Mensaje": {
+      "main": [
+        [
+          {
+            "node": "Enviar Respuesta WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Guardar Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Respuesta WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Responder Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar Log": {
+      "main": [
+        [
+          {
+            "node": "Responder Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "saveManualExecutions": true
+  },
+  "staticData": {},
+  "tags": ["whatsapp", "webhook", "auto-respuesta"],
+  "triggerCount": 1,
+  "updatedAt": "2025-07-12T00:00:00.000Z",
+  "versionId": "1"
+}

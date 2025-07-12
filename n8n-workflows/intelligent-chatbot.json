@@ -1,0 +1,321 @@
+{
+  "name": "WhatsApp Chatbot Inteligente",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",            "path": "webhook/whatsapp-bot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [140, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extraer y normalizar el mensaje\nconst messageData = $json.data;\nconst message = messageData.message;\nconst contact = messageData.contact;\n\nif (!message || !contact) {\n  return { json: { error: 'Datos incompletos' } };\n}\n\n// Normalizar mensaje para análisis\nconst mensajeNormalizado = message.body.toLowerCase().trim();\n\n// Agregar contexto para el switch\nreturn {\n  json: {\n    ...messageData,\n    mensajeNormalizado,\n    palabrasClave: mensajeNormalizado.split(' '),\n    hora: new Date().getHours()\n  }\n};"
+      },
+      "id": "normalize-message",
+      "name": "Normalizar Mensaje",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [360, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.mensajeNormalizado }}",
+              "operation": "contains",
+              "value2": "hola"
+            },
+            {
+              "value1": "={{ $json.mensajeNormalizado }}",
+              "operation": "contains",
+              "value2": "buenos"
+            },
+            {
+              "value1": "={{ $json.mensajeNormalizado }}",
+              "operation": "contains",
+              "value2": "buenas"
+            }
+          ]
+        },
+        "combineOperation": "any"
+      },
+      "id": "switch-saludo",
+      "name": "¿Es Saludo?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [580, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.mensajeNormalizado }}",
+              "operation": "contains",
+              "value2": "precio"
+            },
+            {
+              "value1": "={{ $json.mensajeNormalizado }}",
+              "operation": "contains",
+              "value2": "costo"
+            },
+            {
+              "value1": "={{ $json.mensajeNormalizado }}",
+              "operation": "contains",
+              "value2": "cuanto"
+            }
+          ]
+        },
+        "combineOperation": "any"
+      },
+      "id": "switch-precio",
+      "name": "¿Pregunta Precios?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [580, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.mensajeNormalizado }}",
+              "operation": "contains",
+              "value2": "horario"
+            },
+            {
+              "value1": "={{ $json.mensajeNormalizado }}",
+              "operation": "contains",
+              "value2": "hora"
+            },
+            {
+              "value1": "={{ $json.mensajeNormalizado }}",
+              "operation": "contains",
+              "value2": "atencion"
+            }
+          ]
+        },
+        "combineOperation": "any"
+      },
+      "id": "switch-horario",
+      "name": "¿Pregunta Horarios?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [580, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "const contact = $json.contact;\nconst hora = $json.hora;\n\nlet saludo;\nif (hora < 12) saludo = \"Buenos días\";\nelse if (hora < 18) saludo = \"Buenas tardes\";\nelse saludo = \"Buenas noches\";\n\nreturn {\n  json: {\n    number: contact.number,\n    message: `${saludo} ${contact.name || 'amigo'}! 👋\\n\\n¿En qué puedo ayudarte hoy?\\n\\n📋 Opciones disponibles:\\n• Escribe \"precios\" para ver nuestros precios\\n• Escribe \"horarios\" para conocer horarios de atención\\n• Escribe \"info\" para más información\\n• Escribe \"contacto\" para hablar con un humano\\n\\n¡Estoy aquí para ayudarte! 🤖`\n  }\n};"
+      },
+      "id": "response-saludo",
+      "name": "Respuesta Saludo",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [800, 200]
+    },
+    {
+      "parameters": {
+        "functionCode": "const contact = $json.contact;\n\nreturn {\n  json: {\n    number: contact.number,\n    message: `💰 Lista de Precios\\n\\n🛍️ Productos disponibles:\\n• Producto Premium - $299\\n• Producto Estándar - $199\\n• Producto Básico - $99\\n\\n📦 Servicios:\\n• Consultoría - $150/hora\\n• Instalación - $50\\n• Soporte técnico - $75/hora\\n\\n💳 Métodos de pago:\\n• Efectivo\\n• Transferencia bancaria\\n• Tarjeta de crédito/débito\\n\\n¿Te interesa algún producto en particular? ¡Escríbeme el nombre y te doy más detalles!`\n  }\n};"
+      },
+      "id": "response-precios",
+      "name": "Respuesta Precios",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const contact = $json.contact;\nconst ahora = new Date();\nconst horaActual = ahora.getHours();\nconst dia = ahora.getDay();\n\nlet estadoActual;\nif (dia === 0 || dia === 6) {\n  estadoActual = \"🔴 Cerrado (Fin de semana)\";\n} else if (horaActual >= 9 && horaActual <= 18) {\n  estadoActual = \"🟢 Abierto ahora\";\n} else {\n  estadoActual = \"🔴 Cerrado\";\n}\n\nreturn {\n  json: {\n    number: contact.number,\n    message: `🕐 Horarios de Atención\\n\\n📅 Lunes a Viernes:\\n9:00 AM - 6:00 PM\\n\\n📅 Sábados:\\n10:00 AM - 2:00 PM\\n\\n📅 Domingos:\\nCerrado\\n\\n${estadoActual}\\n\\n📞 Para emergencias fuera de horario:\\n• WhatsApp: Disponible 24/7\\n• Email: soporte@empresa.com\\n\\n⚡ Tiempo de respuesta promedio:\\n• En horario: 5-15 minutos\\n• Fuera de horario: 2-4 horas`\n  }\n};"
+      },
+      "id": "response-horarios",
+      "name": "Respuesta Horarios",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [800, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "const contact = $json.contact;\nconst mensaje = $json.message.body;\n\nreturn {\n  json: {\n    number: contact.number,\n    message: `🤖 Lo siento, no entendí completamente tu mensaje: \"${mensaje}\"\\n\\n💡 Puedes intentar con:\\n• \"hola\" - Para saludar\\n• \"precios\" - Ver lista de precios\\n• \"horarios\" - Conocer horarios\\n• \"contacto\" - Hablar con humano\\n• \"ayuda\" - Ver todas las opciones\\n\\n¿O prefieres que te conecte con una persona real? Escribe \"humano\" y te ayudo. 😊`\n  }\n};"
+      },
+      "id": "response-default",
+      "name": "Respuesta Por Defecto",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [800, 500]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/send-message",
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}"
+      },
+      "id": "send-whatsapp",
+      "name": "Enviar a WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1020, 350]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"status\": \"success\", \"processed\": true}"
+      },
+      "id": "respond-webhook",
+      "name": "Responder Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1240, 350]
+    }
+  ],
+  "connections": {
+    "Webhook WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Mensaje": {
+      "main": [
+        [
+          {
+            "node": "¿Es Saludo?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Pregunta Precios?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Pregunta Horarios?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es Saludo?": {
+      "main": [
+        [
+          {
+            "node": "Respuesta Saludo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respuesta Por Defecto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Pregunta Precios?": {
+      "main": [
+        [
+          {
+            "node": "Respuesta Precios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Pregunta Horarios?": {
+      "main": [
+        [
+          {
+            "node": "Respuesta Horarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Saludo": {
+      "main": [
+        [
+          {
+            "node": "Enviar a WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Precios": {
+      "main": [
+        [
+          {
+            "node": "Enviar a WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Horarios": {
+      "main": [
+        [
+          {
+            "node": "Enviar a WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Por Defecto": {
+      "main": [
+        [
+          {
+            "node": "Enviar a WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar a WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Responder Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "saveManualExecutions": true
+  },
+  "staticData": {},
+  "tags": ["whatsapp", "chatbot", "inteligente"],
+  "triggerCount": 1,
+  "updatedAt": "2025-07-12T00:00:00.000Z",
+  "versionId": "1"
+}

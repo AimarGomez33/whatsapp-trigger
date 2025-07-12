@@ -1,0 +1,154 @@
+{
+  "name": "WhatsApp con Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",            "path": "webhook/whatsapp-bot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook WhatsApp",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [140, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Procesar datos del webhook\nconst messageData = $json.data;\nconst message = messageData.message;\nconst contact = messageData.contact;\n\nif (!message || !contact) {\n  return { json: { error: 'Datos incompletos' } };\n}\n\n// Preparar datos para Google Sheets\nconst timestamp = new Date();\nconst fechaFormateada = timestamp.toLocaleDateString('es-ES');\nconst horaFormateada = timestamp.toLocaleTimeString('es-ES');\n\nconst datosParaSheet = {\n  'Fecha': fechaFormateada,\n  'Hora': horaFormateada,\n  'Nombre': contact.name || 'Sin nombre',\n  'Número': contact.number,\n  'Mensaje': message.body,\n  'Tipo': message.type,\n  'Es Grupo': message.isGroup ? 'Sí' : 'No',\n  'Nombre Grupo': message.groupName || '',\n  'Tiene Media': message.hasMedia ? 'Sí' : 'No',\n  'Es Contacto': contact.isMyContact ? 'Sí' : 'No',\n  'ID Mensaje': message.id,\n  'Timestamp': timestamp.toISOString()\n};\n\n// Preparar respuesta automática\nconst autoResponse = {\n  number: contact.number,\n  message: `✅ Mensaje recibido y registrado\\n\\n📋 Detalles:\\n• Fecha: ${fechaFormateada}\\n• Hora: ${horaFormateada}\\n• Mensaje: \"${message.body.substring(0, 50)}${message.body.length > 50 ? '...' : ''}\"\\n\\nTu consulta ha sido registrada en nuestro sistema. Te responderemos pronto.\\n\\n¡Gracias por contactarnos! 😊`\n};\n\nreturn [\n  { json: datosParaSheet },  // Para Google Sheets\n  { json: autoResponse }     // Para responder\n];"
+      },
+      "id": "process-data",
+      "name": "Procesar Datos",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [360, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "appendOrUpdate",
+        "documentId": "TU_GOOGLE_SHEET_ID_AQUI",
+        "sheetName": "Mensajes WhatsApp",
+        "columnToMatchOn": "ID Mensaje",
+        "options": {}
+      },
+      "id": "google-sheets",
+      "name": "Guardar en Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [580, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/send-message",
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}"
+      },
+      "id": "send-response",
+      "name": "Enviar Respuesta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [580, 400]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Contar mensajes del día\nconst today = new Date().toLocaleDateString('es-ES');\nconst mensajesHoy = $input.all().filter(item => \n  item.json['Fecha'] === today\n).length;\n\nconsole.log(`📊 Mensajes recibidos hoy: ${mensajesHoy}`);\n\n// Estadísticas adicionales\nconst gruposMensajes = $input.all().filter(item => \n  item.json['Es Grupo'] === 'Sí'\n).length;\n\nconst contactosConocidos = $input.all().filter(item => \n  item.json['Es Contacto'] === 'Sí'\n).length;\n\nconsole.log(`👥 Mensajes de grupos: ${gruposMensajes}`);\nconsole.log(`📱 De contactos conocidos: ${contactosConocidos}`);\n\nreturn { json: { \n  mensajesHoy, \n  gruposMensajes, \n  contactosConocidos,\n  status: 'guardado' \n} };"
+      },
+      "id": "stats-node",
+      "name": "Estadísticas",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [800, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"status\": \"success\", \"message\": \"Datos guardados en Google Sheets\"}"
+      },
+      "id": "respond-webhook",
+      "name": "Responder Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1020, 300]
+    }
+  ],
+  "connections": {
+    "Webhook WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Procesar Datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar Datos": {
+      "main": [
+        [
+          {
+            "node": "Guardar en Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar en Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Estadísticas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Respuesta": {
+      "main": [
+        [
+          {
+            "node": "Responder Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Estadísticas": {
+      "main": [
+        [
+          {
+            "node": "Responder Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "saveManualExecutions": true
+  },
+  "staticData": {},
+  "tags": ["whatsapp", "google-sheets", "database"],
+  "triggerCount": 1,
+  "updatedAt": "2025-07-12T00:00:00.000Z",
+  "versionId": "1"
+}
