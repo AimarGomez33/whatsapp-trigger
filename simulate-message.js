@@ -80,7 +80,7 @@ async function simulateIncomingMessage() {
         console.log('🎯 Enviando directamente al webhook de n8n...');
         
         const webhookResponse = await axios.post(
-            'https://jairgomez44.app.n8n.cloud/webhook/whatsapp-bot',
+            'https://n8n-kubectl.42web.io/webhook/whatsapp-bot',
             simulatedMessage,
             {
                 headers: {
@@ -165,7 +165,7 @@ async function simulateMultipleMessages() {
 
         try {
             await axios.post(
-                'https://jairgomez44.app.n8n.cloud/webhook/whatsapp-bot',
+                'https://n8n-kubectl.42web.io/webhook/whatsapp-bot',
                 simulatedData
             );
             console.log(`   ✅ Enviado exitosamente`);
@@ -239,7 +239,7 @@ async function simulateCustomMessage() {
         console.log('🎯 Enviando al webhook de n8n...');
         
         const response = await axios.post(
-            'https://jairgomez44.app.n8n.cloud/webhook/whatsapp-bot',
+            'https://n8n-kubectl.42web.io/webhook/whatsapp-bot',
             customData,
             {
                 headers: {
@@ -336,7 +336,7 @@ async function interactiveCustomMessage() {
         console.log('🎯 Enviando mensaje personalizado...');
         
         const response = await axios.post(
-            'https://jairgomez44.app.n8n.cloud/webhook/whatsapp-bot',
+            'https://n8n-kubectl.42web.io/webhook/whatsapp-bot',
             customData,
             {
                 headers: { 'Content-Type': 'application/json' },

@@ -26,7 +26,7 @@ if not exist ".env" (
     echo ⚠️  Archivo .env no encontrado. Creando uno por defecto...
     echo PORT=3000 > .env
     echo HOST=localhost >> .env
-    echo WEBHOOK_URL=https://jairgomez44.app.n8n.cloud/webhook/whatsapp-bot >> .env
+    echo WEBHOOK_URL=https://n8n-kubectl.42web.io/webhook/whatsapp-bot >> .env
     echo DEBUG=true >> .env
     echo.
     echo ✅ Archivo .env creado. Puedes editarlo para personalizar la configuración.

@@ -143,6 +143,67 @@ class WebhookService {
         }
     }
 
+    // Función para enviar respuesta desde n8n
+    async sendResponseFromN8n(webhookData) {
+        try {
+            console.log('📥 PROCESANDO RESPUESTA DESDE N8N:');
+            console.log('   📱 Para:', webhookData.number);
+            console.log('   💬 Mensaje:', webhookData.message);
+            
+            // Aquí puedes agregar lógica adicional para procesar la respuesta
+            // Por ejemplo, guardar en base de datos, validar formato, etc.
+            
+            return {
+                success: true,
+                processed: true,
+                timestamp: new Date().toISOString(),
+                data: webhookData
+            };
+        } catch (error) {
+            console.error('❌ Error procesando respuesta de n8n:', error.message);
+            throw error;
+        }
+    }
+
+    // Función para crear webhook de respuesta personalizada
+    async sendCustomResponse(messageData, responseText) {
+        if (!this.webhookUrl) return;
+
+        const payload = {
+            event: 'auto_response',
+            timestamp: new Date().toISOString(),
+            data: {
+                original_message: messageData.message,
+                response: {
+                    to: messageData.message.from,
+                    text: responseText,
+                    timestamp: new Date().toISOString()
+                },
+                contact: messageData.contact,
+                metadata: {
+                    source: 'whatsapp-auto-response',
+                    version: '1.0.0'
+                }
+            }
+        };
+
+        try {
+            const response = await axios.post(this.webhookUrl, payload, {
+                timeout: this.timeout,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Event-Type': 'auto-response'
+                }
+            });
+            
+            console.log('✅ Respuesta automática enviada al webhook');
+            return response.data;
+        } catch (error) {
+            console.error('❌ Error enviando respuesta automática:', error.message);
+            throw error;
+        }
+    }
+
     setWebhookUrl(url) {
         this.webhookUrl = url;
     }

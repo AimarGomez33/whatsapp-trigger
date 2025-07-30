@@ -2,7 +2,7 @@ const axios = require('axios');
 
 async function testNewWebhook() {
     console.log('🎯 PROBANDO WEBHOOK DE PRODUCCIÓN');
-    console.log('URL:', 'https://jairgomez44.app.n8n.cloud/webhook/whatsapp-bot');
+    console.log('URL:', 'https://n8n-kubectl.42web.io/webhook/whatsapp-bot');
     console.log('='.repeat(60));
 
     // Mensaje de prueba
@@ -45,7 +45,7 @@ async function testNewWebhook() {
         console.log('📤 Enviando mensaje de prueba...');
         
         const response = await axios.post(
-            'https://jairgomez44.app.n8n.cloud/webhook/whatsapp-bot',
+            'https://n8n-kubectl.42web.io/webhook/whatsapp-bot',
             testMessage,
             {
                 headers: {
@@ -97,7 +97,7 @@ async function testFullFlow() {
     const webhookUrl = process.env.WEBHOOK_URL;
     console.log('   Webhook URL configurada:', webhookUrl);
     
-    if (webhookUrl !== 'https://jairgomez44.app.n8n.cloud/webhook/whatsapp-bot') {
+    if (webhookUrl !== 'https://n8n-kubectl.42web.io/webhook/whatsapp-bot') {
         console.log('   ⚠️ URL no coincide con la nueva. Actualizando...');
     } else {
         console.log('   ✅ URL correcta en .env');

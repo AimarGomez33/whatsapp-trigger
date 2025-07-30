@@ -81,7 +81,7 @@ Deberías ver en la consola:
 node test-new-webhook.js
 
 # Solo webhook de prueba
-curl -X POST https://jairgomez44.app.n8n.cloud/webhook/whatsapp-bot -H "Content-Type: application/json" -d "{\"test\": true}"
+curl -X POST https://n8n-kubectl.42web.io/webhook/whatsapp-bot -H "Content-Type: application/json" -d "{\"test\": true}"
 
 # Ver logs del servidor
 # (en la consola donde corre npm start)
@@ -91,7 +91,7 @@ curl -X POST https://jairgomez44.app.n8n.cloud/webhook/whatsapp-bot -H "Content-
 - **Estado:** http://localhost:3000/status
 - **QR Code:** http://localhost:3000/qr  
 - **Monitor:** http://localhost:3001
-- **n8n:** https://jairgomez44.app.n8n.cloud
+- **n8n:** https://n8n-kubectl.42web.io
 
 ## 💡 Tip para desarrollo:
 Para probar sin molestar a otros, puedes usar el simulador:

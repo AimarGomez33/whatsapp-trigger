@@ -1,0 +1,118 @@
+{
+  "name": "WhatsApp Auto-Response Complete",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook/whatsapp-bot",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "WhatsApp Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "auto-response-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extraer información del mensaje\nconst messageData = $input.first().json.data;\nconst message = messageData.message;\nconst contact = messageData.contact;\n\n// Obtener número del remitente (quitar @c.us)\nconst senderNumber = message.from.split('@')[0];\n\n// Generar respuesta automática\nlet responseMessage = '';\n\n// Respuesta basada en el contenido del mensaje\nconst messageText = message.body.toLowerCase();\n\nif (messageText.includes('hola') || messageText.includes('hello')) {\n  responseMessage = `¡Hola ${contact.name}! 👋 Gracias por contactarme. ¿En qué puedo ayudarte?`;\n} else if (messageText.includes('precio') || messageText.includes('costo')) {\n  responseMessage = `${contact.name}, te envío información sobre precios por WhatsApp. 💰`;\n} else if (messageText.includes('horario')) {\n  responseMessage = `Nuestro horario de atención es de Lunes a Viernes, 9:00 AM - 6:00 PM. 🕘`;\n} else if (messageText.includes('gracias')) {\n  responseMessage = `¡De nada ${contact.name}! 😊 Siempre a la orden.`;\n} else {\n  responseMessage = `${contact.name}, recibí tu mensaje: \"${message.body}\". Te responderé pronto. ⏰`;\n}\n\n// Preparar datos para enviar\nreturn {\n  json: {\n    number: senderNumber,\n    message: responseMessage,\n    originalMessage: message.body,\n    contactName: contact.name,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "process-message",
+      "name": "Process Message",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3000/send-message",
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $json.number }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            }
+          ]
+        }
+      },
+      "id": "send-response",
+      "name": "Send WhatsApp Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Log de confirmación\nconst response = $input.first().json;\n\nconsole.log('✅ Mensaje enviado exitosamente:', {\n  number: response.number,\n  message: response.message,\n  timestamp: response.timestamp\n});\n\nreturn {\n  json: {\n    status: 'success',\n    message: 'Auto-response sent successfully',\n    response: response\n  }\n};"
+      },
+      "id": "log-success",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "WhatsApp Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Message": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp Response": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v0"
+  },
+  "versionId": "auto-response-v1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "whatsapp-auto-response-complete",
+  "tags": [
+    {
+      "createdAt": "2025-07-16T10:00:00.000Z",
+      "updatedAt": "2025-07-16T10:00:00.000Z",
+      "id": "whatsapp-tag",
+      "name": "WhatsApp"
+    }
+  ]
+}
