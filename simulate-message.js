@@ -1,9 +1,13 @@
+//IA CODE GENERATED
 const axios = require('axios');
+require('dotenv').config();
 
 async function simulateIncomingMessage() {
     console.log('🤖 SIMULADOR DE MENSAJES ENTRANTES');
     console.log('Esto simula un mensaje que llega de OTRO número');
     console.log('='.repeat(50));
+    console.log(process.env.WEBHOOK_URL);
+    
 
     // Datos de mensaje simulado (como si viniera de otro contacto)
     const simulatedMessage = {
@@ -48,18 +52,19 @@ async function simulateIncomingMessage() {
         
         // Primero probar el servidor local
         const localResponse = await axios.post(
-            'http://localhost:3000/webhook/incoming',
+            'process.',
             simulatedMessage,
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    'User-Agent': 'WhatsApp-Simulator/1.0'
+                    'User-Agent': 'simulate-message/1.0'
                 },
                 timeout: 5000
             }
         );
 
         console.log('✅ Servidor local procesó el mensaje');
+     
         console.log('📊 Respuesta:', localResponse.status);
 
     } catch (error) {
@@ -80,7 +85,7 @@ async function simulateIncomingMessage() {
         console.log('🎯 Enviando directamente al webhook de n8n...');
         
         const webhookResponse = await axios.post(
-            'https://n8n-kubectl.42web.io/webhook/whatsapp-bot',
+            process.env.WEBHOOK_URL,
             simulatedMessage,
             {
                 headers: {
@@ -165,7 +170,7 @@ async function simulateMultipleMessages() {
 
         try {
             await axios.post(
-                'https://n8n-kubectl.42web.io/webhook/whatsapp-bot',
+                process.env.WEBHOOK_URL,
                 simulatedData
             );
             console.log(`   ✅ Enviado exitosamente`);
@@ -186,6 +191,7 @@ async function simulateMultipleMessages() {
 async function simulateCustomMessage() {
     console.log('💬 SIMULADOR DE MENSAJE PERSONALIZADO');
     console.log('='.repeat(50));
+    
 
     // Obtener parámetros de línea de comandos
     const customMessage = process.argv[3] || '¡Hola! Este es un mensaje personalizado 🎯';
@@ -239,7 +245,7 @@ async function simulateCustomMessage() {
         console.log('🎯 Enviando al webhook de n8n...');
         
         const response = await axios.post(
-            'https://n8n-kubectl.42web.io/webhook/whatsapp-bot',
+            process.env.WEBHOOK_URL,
             customData,
             {
                 headers: {
@@ -336,7 +342,7 @@ async function interactiveCustomMessage() {
         console.log('🎯 Enviando mensaje personalizado...');
         
         const response = await axios.post(
-            'https://n8n-kubectl.42web.io/webhook/whatsapp-bot',
+            process.env.WEBHOOK_URL,
             customData,
             {
                 headers: { 'Content-Type': 'application/json' },
@@ -387,6 +393,7 @@ if (command === 'multiple') {
     console.log('💡 Ejemplos:');
     console.log('   node simulate-message.js custom "¡Hola desde el simulador!" "Ana García" "5215559876543"');
     console.log('   node simulate-message.js custom "Prueba de emoji 😊🚀" "Carlos" "5215551111111"');
+    console.log(require('dotenv').WEBHOOK_URL);
 } else {
     simulateIncomingMessage().catch(console.error);
 }

@@ -5,7 +5,7 @@ echo ===================================
 echo.
 
 echo Tu configuración actual:
-echo 🔗 WEBHOOK_URL=https://n8n-kubectl.42web.io/webhook/whatsapp-bot
+echo 🔗 WEBHOOK_URL=http://ec2-50-17-199-169.compute-1.amazonaws.com:5678/webhook/fd633188-a85e-418a-af42-c9b1fbdab91f
 echo 📊 Estado: ❌ No funciona (devuelve HTML)
 echo.
 

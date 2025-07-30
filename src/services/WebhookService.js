@@ -1,3 +1,4 @@
+//AUTHOR = @AimarJairGomezDaniel
 const axios = require('axios');
 
 class WebhookService {
@@ -7,58 +8,7 @@ class WebhookService {
         this.retries = 3;
     }
 
-    async sendToWebhook(message, attempt = 1) {
-        if (!this.webhookUrl) {
-            console.log('⚠️ ERROR: No webhook URL configured, skipping webhook send');
-            console.log('   Verifica que WEBHOOK_URL esté en el archivo .env');
-            return;
-        }
-
-        try {
-            const payload = this.formatWebhookPayload(message);
-            
-            console.log(`📤 ENVIANDO WEBHOOK (intento ${attempt}/${this.retries}):`);
-            console.log('   🔗 URL:', this.webhookUrl);
-            console.log('   📦 Payload size:', JSON.stringify(payload).length, 'caracteres');
-            console.log('   📱 Message ID:', message.id);
-            console.log('   ⏰ Timeout:', this.timeout, 'ms');
-            
-            const response = await axios.post(this.webhookUrl, payload, {
-                timeout: this.timeout,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'User-Agent': 'WhatsApp-Webhook-Trigger/1.0',
-                    'X-Webhook-Source': 'whatsapp-web-js',
-                    'X-Message-Id': message.id,
-                    ...(process.env.API_KEY && { 'Authorization': `Bearer ${process.env.API_KEY}` })
-                }
-            });
-
-            console.log('✅ WEBHOOK ENVIADO EXITOSAMENTE:');
-            console.log('   📊 Status:', response.status);
-            console.log('   📄 Response:', response.data);
-            console.log('   🆔 Message ID:', message.id);
-
-            return response.data;
-        } catch (error) {
-            console.error(`❌ ERROR ENVIANDO WEBHOOK (intento ${attempt}/${this.retries}):`);
-            console.error('   🔗 URL:', this.webhookUrl);
-            console.error('   ❗ Error:', error.message);
-            console.error('   📊 Status:', error.response?.status);
-            console.error('   📄 Response:', error.response?.data);
-            console.error('   🔧 Code:', error.code);
-
-            // Reintentar si no hemos alcanzado el límite
-            if (attempt < this.retries) {
-                console.log(`🔄 REINTENTANDO en 2 segundos... (${attempt + 1}/${this.retries})`);
-                await this.delay(2000);
-                return this.sendToWebhook(message, attempt + 1);
-            }
-
-            console.error(`💥 FALLÓ DESPUÉS DE ${this.retries} INTENTOS`);
-            throw error;
-        }
-    }
+   //Ia code fragment 
 
     formatWebhookPayload(message) {
         return {
@@ -104,6 +54,7 @@ class WebhookService {
             });
 
             console.log('✅ Custom webhook enviado:', url);
+            console.log(process.env.WEBHOOK_URL)
             return response.data;
         } catch (error) {
             console.error('❌ Error enviando custom webhook:', error.message);
@@ -164,6 +115,8 @@ class WebhookService {
             throw error;
         }
     }
+
+    //Fin IA code fragment
 
     // Función para crear webhook de respuesta personalizada
     async sendCustomResponse(messageData, responseText) {

@@ -1,3 +1,4 @@
+//aUTHOR = @AimarJairGomezDaniel
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const express = require('express');
 const axios = require('axios');
@@ -13,7 +14,7 @@ const ApiService = require('./services/ApiService');
 class WhatsAppWebhookTrigger {
     constructor() {
         this.app = express();
-        this.port = process.env.PORT || 3000;
+        this.port = process.env.PORT || process.env.PORT;
         this.host = process.env.HOST || 'localhost';
         
         this.whatsappService = new WhatsAppService();
@@ -166,7 +167,7 @@ curl -X POST http://localhost:${process.env.PORT || 3000}/send-message \\<br>
                             <h3>✅ WhatsApp Conectado</h3>
                             <p>✓ Los mensajes entrantes se envían automáticamente al webhook</p>
                             <p>✓ Puedes enviar mensajes usando la API</p>
-                            <p>✓ Monitor disponible en <a href="http://localhost:3001" target="_blank" style="color: #a7f3d0;">localhost:3001</a></p>
+                            <p>✓ Monitor disponible en <a href="http://localhost: 3000" target="_blank" style="color: #a7f3d0;">localhost:3000</a></p>
                         </div>
                         `}
 
